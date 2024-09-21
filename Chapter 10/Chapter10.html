@@ -1,6 +1,7 @@
 <body></body>
 <script src="http://gamingJS.com/Three.js"></script> 
-<script src="http://gamingJS.com/Tween.js"></script> 
+<script src="http://gamingJS.com/Tween.js"></script>
+<script src="http://gamingJS.com/ChromeFixes.js"></script>
 <script src="http://gamingJS.com/Scoreboard.js"></script>
 <script src="http://gamingJS.com/Sounds.js"></script> 
 <script> 
@@ -26,8 +27,8 @@
 	scoreboard.countdown(45);
 	scoreboard.score();
 	Scoreboard.help(
-		'Arrow keys to move. ' +
-		'Space bar to jump for fruit.' +
+		'Arrow keys to move; ' +
+		'Space bar to jump for fruit;' +
 		'Watch for shaking trees with fruit.' +
 		'Get near the tree and jump before the fruit is gone!'
 	);
@@ -67,27 +68,28 @@
 	left_foot.position.set(75, -125, 0); 
 	avatar.add(left_foot); marker.add(camera);
 
-	var eyes = new THREE.SphereGeometry(20);
+	// var eyes = new THREE.SphereGeometry(20);
 
-	var eye_1 = new THREE.Mesh(eyes, cover); 
-	eye_1.position.set(50, 50, 70); 
-	avatar.add(eye_1); marker.add(camera);
+	// var eye_1 = new THREE.Mesh(eyes, cover); 
+	// eye_1.position.set(50, 50, 70); 
+	// avatar.add(eye_1); marker.add(camera);
 
-	var eye_2 = new THREE.Mesh(eyes, cover); 
-	eye_2.position.set(-50, 50, 70); 
-	avatar.add(eye_2); marker.add(camera);
+	// var eye_2 = new THREE.Mesh(eyes, cover); 
+	// eye_2.position.set(-50, 50, 70); 
+	// avatar.add(eye_2); marker.add(camera);
 
-	var no = new THREE.SphereGeometry(25);
-	var no = new THREE.Mesh(no, cover); 
-	no.position.set(0, 5, 75); 
-	avatar.add(no); marker.add(camera);
+	// var no = new THREE.SphereGeometry(25);
+	// var no = new THREE.Mesh(no, cover); 
+	// no.position.set(0, 5, 75); 
+	// avatar.add(no); 
+	marker.add(camera);
 	// Trees
 	var tree_with_treasure;
 	var trees = []; 
-	makeTreeAt( 500, 0); 
-	makeTreeAt(-500, 0); 
-	makeTreeAt( 750, -1000); 
-	makeTreeAt(-750, -1000); 
+	trees.push(makeTreeAt( 500, 0)); 
+	trees.push(makeTreeAt(-500, 0)); 
+	trees.push(makeTreeAt( 750, -1000)); 
+	trees.push(makeTreeAt(-750, -1000)); 
 	
 	function makeTreeAt(x, z) { 
 		var trunk = new THREE.Mesh(
@@ -109,7 +111,7 @@
         new THREE.MeshNormalMaterial()
   );
   boundary.position.y = -100;
-  boundary.rotation.x = -Math.PI / 2;
+  boundary.rotation.x = -Math.PI/2;
   trunk.add(boundary);
   not_allowed.push(boundary);
 
@@ -120,9 +122,7 @@
 	} 
 	function shakeTree() {
 		tree_with_treasure = Math.floor(Math.random() * trees.length);
-
-		new TWEEN
-		.Tween({x: 0})
+		new TWEEN.Tween({x: 0})
         .to ({x: 2*Math.PI}, 200)
 		.repeat(20)
         .onUpdate(function (){
@@ -148,7 +148,15 @@
 	} 
 	
 	animate(); 
-	
+	function walk() { 
+		if (!isWalking()) return; 
+		
+		var position = Math.sin(clock.getElapsedTime()*5) * 50;
+		right_hand.position.z = position; 
+		left_hand.position.z = -position; 
+		right_foot.position.z = -position; 
+		left_foot.position.z = position; 
+	} 
 
 
 
@@ -171,15 +179,7 @@
 	 })
      .start();
 	}
-	function walk() { 
-		if (!isWalking()) return; 
-		
-		var position = Math.sin(clock.getElapsedTime()*5) * 50;
-		right_hand.position.z = position; 
-		left_hand.position.z = -position; 
-		right_foot.position.z = -position; 
-		left_foot.position.z = position; 
-	} 
+	
 	
 	var is_cartwheeling = false; 
 	var is_flipping = false; 
@@ -258,14 +258,14 @@
 		return false;
 }
 function jump(){
-checkforTreasure();
+checkForTreasure();
 animateJump();
 }
 
-function checkforTreasure(){
+function checkForTreasure() {
 	if (tree_with_treasure == undefined) return;
 
-	var treasure_tree = tree[tree_with_treasure],
+	var treasure_tree = trees[tree_with_treasure],
 	p1 = treasure_tree.parent.position,
 	p2 = marker.position;
 
@@ -275,13 +275,13 @@ function checkforTreasure(){
 	);
 
 	if(distance < 500){
-	scorePoints
+	scorePoints();
 	} 
 }
 function scorePoints(){
 	if (scoreboard.getTimeRemaining() === 0) return;
 	scoreboard.addpoints(10);
-	sounds.bubble.play();
+	Sounds.bubble.play();
 	animateFruit();
 }
 var fruit;
@@ -300,25 +300,25 @@ function animateFruit() {
 		height: 150,
 		spin: 0
 	})
-	to({
+	.to({
 		height: 250,
 		spin: 4
-	}, 500).
-	onUpdate(function() {
+	}, 500)
+	.onUpdate(function() {
  fruit.position.y = this.height;
  fruit.rotation.z = this.spin;
-}).
-pnComplete(function() {
+})
+.onComplete(function() {
 	marker.remove(fruit);
 	fruit = undefined;
-}).
-start();
+})
+.start();
 }
 function animateJump(){
 	new TWEEN
 	.Tween({jump: 0})
 	.to({jump: Math.PI}, 500)
-	onUpdate(function () {
+	.onUpdate(function () {
 		marker.position.y = 200*Math.sin(this.jump);
 	})
 	.start();
